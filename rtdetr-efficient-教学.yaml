@@ -1,0 +1,47 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# RT-DETR-l object detection model with P3-P5 outputs. For details see https://docs.ultralytics.com/models/rtdetr
+
+# Parameters
+nc: 10  # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolov8n-cls.yaml' will call yolov8-cls.yaml with scale 'n'
+  # [depth, width, max_channels]
+  l: [1.00, 1.00, 1024]
+# 1：8x8 2：4x4 3：2x2 4：1x1
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, efficientnet_v2, []]  # 4
+
+head:
+  - [-1, 1, Conv, [256, 1, 1, None, 1, 1, False]]  # 5 input_proj.2  1x1
+  - [-1, 1, AIFI, [1024, 8]] # 6  1x1
+  - [-1, 1, Conv, [256, 1, 1]]  # 7, Y5, lateral_convs.0  1x1
+
+  - [2, 1, Conv, [256]] #8  4x4
+  - [3, 1, Conv, [256]] #9  2x2
+  - [7, 1, Conv, [256]] #10 1x1
+
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']] # 11 1x1->2x2
+  - [[-1, 9], 1, BiFPN, []] # 12 2x2
+  - [-1, 3, RepC3, [256]]  # 13, fpn_blocks.0 2x2
+
+  - [-1, 1, nn.Upsample, [None, 2, 'nearest']] # 14 4x4
+  - [[-1, 8], 1, BiFPN, []] # 15 4x4
+  - [-1, 3, RepC3, [256]]  # 16, fpn_blocks.0 #4x4 
+
+  - [1, 1, Conv, [256, 3, 2]] # 17 8x8->4x4
+  - [[-1, 8, 16], 1, BiFPN, []] # 18 4x4
+  - [-1, 3, RepC3, [256]]  # 19, fpn_blocks.0 4x4
+
+  - [-1, 1, Conv, [256, 3, 2]] # 20 4x4->2x2
+  - [[-1, 9, 13], 1, BiFPN, []] # 21 2x2
+  - [-1, 3, RepC3, [256]]  # 22, fpn_blocks.0 2x2
+
+  - [-1, 1, Conv, [256, 3, 2]] # 23 2x2->1x1
+  - [[-1, 10], 1, BiFPN, []] # 24 1x1
+  - [-1, 3, RepC3, [256]]  # 25, fpn_blocks.0 1x1
+  
+  - [[19, 22, 25], 1, RTDETRDecoder, [nc, 256, 300, 4, 8, 3]]  # Detect(P3, P4, P5)
+
+
+
+
