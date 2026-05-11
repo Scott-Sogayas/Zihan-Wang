@@ -1,0 +1,9 @@
+# car.yaml 最终版（不用管 VisDrone 的原始类别）
+path: /root/autodl-tmp
+train: images/train
+val: images/val
+test: images/val
+
+nc: 1                # 仅1个类别
+names:
+  0: car             # 评估时，系统会把模型所有预测都匹配到这个唯一类别
